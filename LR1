@@ -12,14 +12,21 @@ data.head(10)
 
 data.info()
 
+У нас все значения признаков не нулевые, это хорошо, проверим дубликаты
+
 print(len(data))
 data.drop_duplicates(keep='first', inplace=True)
 print(len(data))
+
+дубликатов больше нет (даже если их не было)
+Корреляция
 
 import seaborn as sns
 corr = data.corr().abs()
 sns.set(rc={'figure.figsize':(12,14)})
 sns.heatmap(corr, xticklabels=corr.columns.values, yticklabels=corr.columns.values, annot=True, fmt='.2f', linewidths=2)
+
+Наблюдается некоторая корреляция признаков. Рассмотрим признаки с коррелирующим коэффициентом в диапазоне [0,6;1]
 
 corr_copy = corr.copy()
 for row in corr_copy.index:
@@ -30,6 +37,8 @@ for row in corr_copy.index:
             corr_copy[row][column] = round(corr_copy[row][column], 2)
 
 corr_copy
+
+Удалим коррелирующие признаки: "citric acid", "density", "pH", "total sulfur dioxide".
 
 data_cleaned = data.drop(['citric acid', 'density', 'pH', 'total sulfur dioxide'], axis = 1)
 
@@ -65,6 +74,8 @@ index_max = max(test_scores, key=test_scores.get)
 print(f'The value of the parameter "n_neighbors" in the KNN Classifier: {index_max}')
 print(f'The max value of the metric "score" in the test sample: {round(test_scores[index_max], 4)}')
 
+фигня какая-то, попробуем оверсемплинг
+
 from imblearn.over_sampling import SMOTE
 
 smote = SMOTE()
@@ -79,6 +90,8 @@ from sklearn.neighbors import KNeighborsClassifier
 clf = KNeighborsClassifier(n_neighbors=3)
 clf.fit(X_train, y_train)
 clf.score(X_test, y_test)
+
+Уже лучше (хотя бы точнее)
 
 train_scores = {}
 test_scores = {}
