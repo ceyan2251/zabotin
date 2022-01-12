@@ -1,0 +1,101 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib inline
+#ignore warnings
+import warnings
+warnings.filterwarnings('ignore')
+
+url = 'https://drive.google.com/u/0/uc?id=1-TzMGAKLjS9RrYXSBWCAD0zAk-gd1pab&export=download'
+data = pd.read_csv(url)
+data.head(10)
+
+data.info()
+
+print(len(data))
+data.drop_duplicates(keep='first', inplace=True)
+print(len(data))
+
+import seaborn as sns
+corr = data.corr().abs()
+sns.set(rc={'figure.figsize':(12,14)})
+sns.heatmap(corr, xticklabels=corr.columns.values, yticklabels=corr.columns.values, annot=True, fmt='.2f', linewidths=2)
+
+corr_copy = corr.copy()
+for row in corr_copy.index:
+    for column in corr_copy[row].index: 
+        if corr_copy[row][column] < 0.6: 
+            corr_copy[row][column] = '---'
+        else:
+            corr_copy[row][column] = round(corr_copy[row][column], 2)
+
+corr_copy
+
+data_cleaned = data.drop(['citric acid', 'density', 'pH', 'total sulfur dioxide'], axis = 1)
+
+X = data_cleaned[data_cleaned.columns[:-1]]
+y = data['quality']
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X,y)
+
+
+from sklearn.neighbors import KNeighborsClassifier
+clf = KNeighborsClassifier(n_neighbors=3)
+clf.fit(X_train, y_train)
+clf.score(X_test, y_test)
+
+train_scores = {}
+test_scores = {}
+
+for n in range(1,41):
+  clf = KNeighborsClassifier(n_neighbors=n)
+  clf.fit(X_train, y_train)
+  train_scores[n] = clf.score(X_train, y_train)
+  test_scores[n] = clf.score(X_test, y_test)
+
+plt.plot(list(train_scores.keys()), list(train_scores.values()), label='Обучающая выборка')
+plt.plot(list(test_scores.keys()), list(test_scores.values()), label='Тестовая выборка')
+plt.xlabel('Количество соседей')
+plt.ylabel('Доля верных ответов')
+plt.legend()
+plt.show()
+
+index_max = max(test_scores, key=test_scores.get)
+print(f'The value of the parameter "n_neighbors" in the KNN Classifier: {index_max}')
+print(f'The max value of the metric "score" in the test sample: {round(test_scores[index_max], 4)}')
+
+from imblearn.over_sampling import SMOTE
+
+smote = SMOTE()
+X_sm, y_sm = smote.fit_sample(X, y)
+X_sm.shape, y_sm.shape
+
+
+X_train, X_test, y_train, y_test = train_test_split(X_sm,y_sm)
+
+
+from sklearn.neighbors import KNeighborsClassifier
+clf = KNeighborsClassifier(n_neighbors=3)
+clf.fit(X_train, y_train)
+clf.score(X_test, y_test)
+
+train_scores = {}
+test_scores = {}
+
+for n in range(1,41):
+  clf = KNeighborsClassifier(n_neighbors=n)
+  clf.fit(X_train, y_train)
+  train_scores[n] = clf.score(X_train, y_train)
+  test_scores[n] = clf.score(X_test, y_test)
+plt.plot(list(train_scores.keys()), list(train_scores.values()), label='Обучающая выборка')
+plt.plot(list(test_scores.keys()), list(test_scores.values()), label='Тестовая выборка')
+plt.xlabel('Количество соседей')
+plt.ylabel('Доля верных ответов')
+plt.legend()
+plt.show()
+
+index_max = max(test_scores, key=test_scores.get)
+print(f'The value of the parameter "n_neighbors" in the KNN Classifier: {index_max}')
+print(f'The max value of the metric "score" in the test sample: {round(test_scores[index_max], 4)}')
+
